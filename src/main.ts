@@ -9,6 +9,9 @@ async function bootstrap() {
   });
   app.useGlobalPipes(new ValidationPipe());
 
+  // Set the global prefix for all routes
+  app.setGlobalPrefix('api');
+
   app.enableVersioning({
     type: VersioningType.URI,
     defaultVersion: '1',
@@ -18,10 +21,10 @@ async function bootstrap() {
     .setTitle('Quick Bill API')
     .setDescription('The Quick Bill API description')
     .setVersion('1.0')
-    .addTag('quick-bill')
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
+
   await app.listen(3000);
 }
 bootstrap();

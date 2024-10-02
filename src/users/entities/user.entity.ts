@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Company } from 'src/companies/entities/company.entity';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class User {
@@ -18,6 +19,12 @@ export class User {
   profilePicture: string;
 
   @Column({
+    type: 'boolean',
+    default: false,
+  })
+  isOnboarded: boolean;
+
+  @Column({
     type: 'timestamp',
     default: () => 'CURRENT_TIMESTAMP',
   })
@@ -30,6 +37,6 @@ export class User {
   })
   updatedAt: Date;
 
-  //   @Column('array')
-  //   companies: Companies[];
+  @OneToMany(() => Company, (company) => company.belongsTo)
+  companies: Company[];
 }

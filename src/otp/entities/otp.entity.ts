@@ -13,10 +13,12 @@ export class OTPStore {
   @Column({ unique: true })
   email: string;
 
-  @Column()
+  @Column({
+    nullable: true,
+  })
   otp: string;
 
-  @Column({ type: 'timestamp' })
+  @Column({ type: 'timestamp', nullable: true })
   otpExpiration: Date;
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as dotenv from 'dotenv';
@@ -76,6 +76,32 @@ export class AuthService {
       console.error('Error verifying refresh token: ', error);
       return null;
     }
+  }
+
+  // Generate Access Token from Refresh Token
+  async generateAccessTokenFromRefreshToken(
+    refreshToken: string,
+  ): Promise<string> {
+    // Verify the refresh token
+    const decoded = this.verifyRefreshToken(refreshToken);
+    if (!decoded) {
+      throw new UnauthorizedException('Invalid or expired refresh token');
+    }
+
+    const email = decoded.email; // Extract the email from the decoded payload
+
+    // Optionally, you can fetch the stored refresh token from the database
+    const storedToken = await this.refreshTokenRepository.findOne({
+      where: { token: refreshToken, userEmail: email },
+    });
+
+    if (!storedToken || storedToken.expiresAt < new Date()) {
+      throw new UnauthorizedException('Invalid or expired refresh token');
+    }
+
+    // Generate a new access token
+    const newAccessToken = this.generateAccessToken(email);
+    return newAccessToken;
   }
 
   // Delete Refresh Token

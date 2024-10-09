@@ -21,6 +21,11 @@ async function bootstrap() {
     .setTitle('Quick Bill API')
     .setDescription('The Quick Bill API description')
     .setVersion('1.0')
+    .addTag('Authentication')
+    .addTag('Users')
+    .addTag('Companies')
+    .addTag('Invoices')
+    .addTag('Invoice Items')
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);

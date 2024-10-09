@@ -2,9 +2,11 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { config } from 'dotenv';
+import { RefreshToken } from 'src/auth/entities/refresh-token.entity';
 import { Company } from 'src/companies/entities/company.entity';
 import { InvoiceItem } from 'src/invoice-items/entities/invoice-item.entity';
 import { Invoice } from 'src/invoices/entities/invoice.entity';
+import { OTPStore } from 'src/otp/entities/otp.entity';
 import { User } from 'src/users/entities/user.entity';
 
 config({
@@ -34,7 +36,14 @@ const dbHost =
       },
       autoLoadEntities: true,
     }),
-    TypeOrmModule.forFeature([User, Company, Invoice, InvoiceItem]), // Add repositories or entities here if needed
+    TypeOrmModule.forFeature([
+      User,
+      Company,
+      Invoice,
+      InvoiceItem,
+      RefreshToken,
+      OTPStore,
+    ]), // Add repositories or entities here if needed
   ],
 })
 export class DatabaseModule {}

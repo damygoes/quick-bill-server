@@ -23,13 +23,20 @@ export class OTPService {
       parseInt(process.env.OTP_EXPIRATION!),
     );
 
-    await this.otpRepository.save({
-      email,
-      otp,
-      otpExpiration: expiration,
+    const existingOTPEmail = await this.otpRepository.findOne({
+      where: { email },
     });
 
-    // Send OTP email to the user
+    if (existingOTPEmail) {
+      existingOTPEmail.otp = otp;
+      existingOTPEmail.otpExpiration = expiration;
+
+      await this.otpRepository.save(existingOTPEmail);
+    } else {
+      const newOTP = this.otpRepository.create({ email, otp });
+
+      await this.otpRepository.save(newOTP);
+    }
 
     await this.emailService.sendOTPEmail(email, otp);
   }

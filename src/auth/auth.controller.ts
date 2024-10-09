@@ -1,5 +1,7 @@
 import { Body, Controller, Post, UnauthorizedException } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { RequestOtpDto } from 'src/otp/dto/request-otp.dto';
+import { VerifyOtpDto } from 'src/otp/dto/verify-otp.dto';
 import { AuthService } from './auth.service';
 
 @ApiTags('Authentication')
@@ -7,13 +9,34 @@ import { AuthService } from './auth.service';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @ApiOperation({ summary: 'Login a user' })
+  @ApiOperation({ summary: 'Request an OTP' })
   @ApiBody({
-    description: 'The email of the user attempting to login',
+    description: 'The email of the user requesting an OTP',
     schema: {
       type: 'object',
       properties: {
         email: { type: 'string', example: 'user@example.com' },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'OTP sent to email',
+  })
+  @Post('request-otp')
+  async requestOTP(@Body() requestOtpDto: RequestOtpDto) {
+    await this.authService.requestOTP(requestOtpDto.email);
+    return { message: 'OTP sent to your email.' };
+  }
+
+  @ApiOperation({ summary: 'Login with OTP' })
+  @ApiBody({
+    description: 'The email and OTP to verify',
+    schema: {
+      type: 'object',
+      properties: {
+        email: { type: 'string', example: 'user@example.com' },
+        otp: { type: 'string', example: '123456' },
       },
     },
   })
@@ -29,43 +52,21 @@ export class AuthController {
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @Post('login')
-  async login(@Body('email') email: string) {
-    const accessToken = this.authService.generateAccessToken(email);
-    const refreshToken =
-      await this.authService.generateAndStoreRefreshToken(email);
-    return { accessToken, refreshToken };
-  }
-
-  @ApiOperation({ summary: 'Refresh the access token' })
-  @ApiBody({
-    description: 'The refresh token issued during login',
-    schema: {
-      type: 'object',
-      properties: {
-        refreshToken: { type: 'string', example: 'refresh-token-here' },
-      },
-    },
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'New access token generated',
-    schema: {
-      example: {
-        accessToken: 'new-jwt-token-here',
-      },
-    },
-  })
-  @ApiResponse({ status: 401, description: 'Invalid refresh token' })
-  @Post('refresh')
-  async refresh(@Body('refreshToken') refreshToken: string) {
-    const tokenPayload = this.authService.verifyRefreshToken(refreshToken);
-    if (!tokenPayload) {
-      throw new UnauthorizedException('Invalid refresh token');
+  async loginWithOTP(@Body() verifyOtpDto: VerifyOtpDto) {
+    const isValid = await this.authService.verifyOTP(
+      verifyOtpDto.email,
+      verifyOtpDto.otp,
+    );
+    if (!isValid) {
+      throw new UnauthorizedException('Invalid OTP');
     }
 
     const accessToken = this.authService.generateAccessToken(
-      tokenPayload.email,
+      verifyOtpDto.email,
     );
-    return { accessToken };
+    const refreshToken = await this.authService.generateAndStoreRefreshToken(
+      verifyOtpDto.email,
+    );
+    return { accessToken, refreshToken };
   }
 }

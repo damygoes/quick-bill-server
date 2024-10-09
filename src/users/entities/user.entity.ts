@@ -15,7 +15,9 @@ export class User {
   @Column()
   email: string;
 
-  @Column()
+  @Column({
+    nullable: true,
+  })
   profilePicture: string;
 
   @Column({

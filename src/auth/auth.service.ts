@@ -3,7 +3,9 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as dotenv from 'dotenv';
 import { EmailService } from 'src/email/email.service';
+import { OTPService } from 'src/otp/otp.service';
 import { Repository } from 'typeorm';
+import { UsersService } from '../users/users.service';
 import { RefreshToken } from './entities/refresh-token.entity';
 
 dotenv.config();
@@ -18,7 +20,9 @@ export class AuthService {
     private jwtService: JwtService,
     @InjectRepository(RefreshToken)
     private refreshTokenRepository: Repository<RefreshToken>,
-    private readonly emailService: EmailService, // Include all dependencies in a single constructor
+    private readonly emailService: EmailService,
+    private readonly otpService: OTPService,
+    private readonly usersService: UsersService,
   ) {}
 
   // Generate Access Token
@@ -81,6 +85,24 @@ export class AuthService {
     } catch (error) {
       console.error('Error deleting refresh token: ', error);
     }
+  }
+
+  // Request OTP
+  async requestOTP(email: string): Promise<void> {
+    let user = await this.usersService.getUserWithEmail(email);
+
+    if (!user) {
+      user = await this.usersService.createTemporaryUser({ email });
+    }
+
+    // Generate OTP and store it, then send the OTP email
+    const otp = this.otpService.generateOTP();
+    await this.otpService.storeOTP(email, otp);
+  }
+
+  // Verify OTP
+  async verifyOTP(email: string, otp: string): Promise<boolean> {
+    return await this.otpService.verifyOTP(email, otp);
   }
 
   // Send OTP

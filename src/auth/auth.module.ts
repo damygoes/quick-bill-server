@@ -3,6 +3,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { EmailModule } from 'src/email/email.module';
 import { OTPModule } from 'src/otp/otp.module';
+import { UsersModule } from 'src/users/users.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { RefreshToken } from './entities/refresh-token.entity';
@@ -16,6 +17,7 @@ import { RefreshToken } from './entities/refresh-token.entity';
     TypeOrmModule.forFeature([RefreshToken]),
     OTPModule,
     EmailModule,
+    UsersModule,
   ],
   controllers: [AuthController],
   providers: [AuthService],

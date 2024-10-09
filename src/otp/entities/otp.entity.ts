@@ -1,8 +1,6 @@
 import {
   Column,
-  CreateDateColumn,
   Entity,
-  Index,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -12,8 +10,7 @@ export class OTPStore {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
-  @Index({ unique: true })
+  @Column({ unique: true })
   email: string;
 
   @Column()
@@ -22,9 +19,9 @@ export class OTPStore {
   @Column({ type: 'timestamp' })
   otpExpiration: Date;
 
-  @CreateDateColumn()
+  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   updatedAt: Date;
 }

@@ -82,15 +82,13 @@ export class AuthService {
   async generateAccessTokenFromRefreshToken(
     refreshToken: string,
   ): Promise<string> {
-    // Verify the refresh token
     const decoded = this.verifyRefreshToken(refreshToken);
     if (!decoded) {
       throw new UnauthorizedException('Invalid or expired refresh token');
     }
 
-    const email = decoded.email; // Extract the email from the decoded payload
+    const email = decoded.email;
 
-    // Optionally, you can fetch the stored refresh token from the database
     const storedToken = await this.refreshTokenRepository.findOne({
       where: { token: refreshToken, userEmail: email },
     });

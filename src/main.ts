@@ -8,8 +8,15 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     logger: ['error', 'warn', 'log'],
   });
-  app.useGlobalPipes(new ValidationPipe());
   app.use(cookieParser());
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true, // Strips properties that do not have decorators in the DTO
+      forbidNonWhitelisted: true, // Rejects requests with non-whitelisted properties
+      validateCustomDecorators: true, // Validates custom decorators
+      transform: true, // Automatically transform payloads to DTO instances
+    }),
+  );
 
   // Set the global prefix for all routes
   app.setGlobalPrefix('api');

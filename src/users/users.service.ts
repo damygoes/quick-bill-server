@@ -1,12 +1,14 @@
 import {
   ConflictException,
+  HttpException,
+  HttpStatus,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { checkEmptyRequestBody } from 'src/common/utils/checkEmptyRequestBody';
 import { Repository } from 'typeorm';
 import { CreateTemporaryUserDto } from './dto/create-temporary-user.dto';
-import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
 
@@ -16,10 +18,6 @@ export class UsersService {
     @InjectRepository(User)
     private usersRepository: Repository<User>,
   ) {}
-
-  createUser(createUserDto: CreateUserDto) {
-    return `This action adds a new user with the following details: ${createUserDto}`;
-  }
 
   async createTemporaryUser(
     createTemporaryUserDto: CreateTemporaryUserDto,
@@ -57,20 +55,26 @@ export class UsersService {
     }
   }
 
-  findAll(): Promise<User[]> {
-    return this.usersRepository.find();
-  }
+  async getUserById(id: string): Promise<User | null> {
+    const user = await this.usersRepository.findOne({
+      where: { id: id },
+      relations: ['companies'],
+    });
 
-  findOne(id: string): Promise<User | null> {
-    return this.usersRepository.findOneBy({ id });
+    // Dynamically set isOnboarded based on the companies count
+    user.isOnboarded = user.companies.length > 0;
+
+    return user;
   }
 
   async getUserWithEmail(email: string): Promise<User | null> {
     return await this.usersRepository.findOne({ where: { email } });
   }
 
-  async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
-    const user = await this.usersRepository.findOneBy({ id });
+  async updateUser(id: string, updateUserDto: UpdateUserDto): Promise<User> {
+    checkEmptyRequestBody(updateUserDto);
+    const user = await this.getUserById(id);
+
     if (!user) {
       throw new NotFoundException('User not found');
     }
@@ -81,7 +85,15 @@ export class UsersService {
     });
   }
 
-  async remove(id: string): Promise<void> {
-    await this.usersRepository.delete(id);
+  async deleteUser(id: string): Promise<void> {
+    const user = await this.getUserById(id);
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    await this.usersRepository.remove(user);
+
+    throw new HttpException('User deleted successfully', HttpStatus.NO_CONTENT);
   }
 }

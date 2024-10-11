@@ -1,18 +1,19 @@
 import { PartialType } from '@nestjs/swagger';
-import { IsOptional, ValidateIf } from 'class-validator';
+import { IsOptional } from 'class-validator';
+import { validateUserUpdateDto } from 'src/common/decorators/validateUserUpdateDto.decorator';
 import { CreateUserDto } from './create-user.dto';
 
 export class UpdateUserDto extends PartialType(CreateUserDto) {
   @IsOptional()
-  @ValidateIf((o) => o.firstName || o.lastName || o.email || o.profilePicture)
+  @validateUserUpdateDto()
   firstName?: string;
 
   @IsOptional()
-  @ValidateIf((o) => o.firstName || o.lastName || o.email || o.profilePicture)
+  @validateUserUpdateDto()
   lastName?: string;
 
   @IsOptional()
-  @ValidateIf((o) => o.firstName || o.lastName || o.email || o.profilePicture)
+  @validateUserUpdateDto()
   email?: string;
 
   @IsOptional()

@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { NextFunction, Response } from 'express';
-import { CustomRequest } from 'src/types/CustomRequest';
+import { CustomRequest } from 'src/common/types/CustomRequest';
 
 @Injectable()
 export class AuthMiddleware implements NestMiddleware {

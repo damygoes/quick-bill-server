@@ -6,11 +6,12 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Error } from 'src/common/enums/error.enum';
 import { checkEmptyRequestBody } from 'src/common/utils/checkEmptyRequestBody';
 import { Repository } from 'typeorm';
 import { CreateTemporaryUserDto } from './dto/create-temporary-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { User } from './entities/user.entity';
+import { User, UserId } from './entities/user.entity';
 
 @Injectable()
 export class UsersService {
@@ -55,7 +56,7 @@ export class UsersService {
     }
   }
 
-  async getUserById(id: string): Promise<User | null> {
+  async getUserById(id: UserId): Promise<User | null> {
     const user = await this.usersRepository.findOne({
       where: { id: id },
       relations: ['companies'],
@@ -64,6 +65,13 @@ export class UsersService {
     // Dynamically set isOnboarded based on the companies count
     user.isOnboarded = user.companies.length > 0;
 
+    // Map the companies array to extract only the ids
+    const companyIds = user.companies.map((company) => company.id);
+
+    // Remove the full companies data and replace with just company ids
+    (user as any).companyIds = companyIds;
+    delete (user as any).companies;
+
     return user;
   }
 
@@ -71,12 +79,12 @@ export class UsersService {
     return await this.usersRepository.findOne({ where: { email } });
   }
 
-  async updateUser(id: string, updateUserDto: UpdateUserDto): Promise<User> {
+  async updateUser(id: UserId, updateUserDto: UpdateUserDto): Promise<User> {
     checkEmptyRequestBody(updateUserDto);
     const user = await this.getUserById(id);
 
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException(Error.USER_NOT_FOUND);
     }
 
     return this.usersRepository.save({
@@ -85,11 +93,11 @@ export class UsersService {
     });
   }
 
-  async deleteUser(id: string): Promise<void> {
+  async deleteUser(id: UserId): Promise<void> {
     const user = await this.getUserById(id);
 
     if (!user) {
-      throw new NotFoundException('User not found');
+      return null;
     }
 
     await this.usersRepository.remove(user);

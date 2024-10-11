@@ -1,10 +1,12 @@
 import { Company } from 'src/companies/entities/company.entity';
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 
+export type UserId = string;
+
 @Entity()
 export class User {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id: UserId;
 
   @Column()
   firstName: string;
@@ -15,21 +17,13 @@ export class User {
   @Column()
   email: string;
 
-  @Column({
-    nullable: true,
-  })
+  @Column({ nullable: true })
   profilePicture: string;
 
-  @Column({
-    type: 'boolean',
-    default: false,
-  })
+  @Column({ type: 'boolean', default: false })
   isOnboarded: boolean;
 
-  @Column({
-    type: 'timestamp',
-    default: () => 'CURRENT_TIMESTAMP',
-  })
+  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
 
   @Column({
@@ -39,6 +33,7 @@ export class User {
   })
   updatedAt: Date;
 
-  @OneToMany(() => Company, (company) => company.belongsTo)
+  // The @OneToMany side does not need a @JoinColumn
+  @OneToMany(() => Company, (company) => company.user)
   companies: Company[];
 }

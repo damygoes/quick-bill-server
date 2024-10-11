@@ -3,16 +3,20 @@ import {
   Controller,
   Delete,
   Get,
+  HttpException,
+  HttpStatus,
   Param,
   Patch,
   Request,
-  UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Error } from 'src/common/enums/error.enum';
+import { AuthGuard } from 'src/common/guards/auth-guard';
 import { OwnershipGuard } from 'src/common/guards/ownership-guard';
-import { CustomRequest } from 'src/types/CustomRequest';
+import { CustomRequest } from 'src/common/types/CustomRequest';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UserId } from './entities/user.entity';
 import { UsersService } from './users.service';
 
 @ApiTags('Users')
@@ -41,18 +45,15 @@ export class UsersController {
   })
   @ApiResponse({
     status: 404,
-    description: 'User not found',
+    description: Error.USER_NOT_FOUND,
   })
   @Get('self')
+  @UseGuards(AuthGuard)
   @UseGuards(OwnershipGuard)
   async getAuthenticatedUser(@Request() req: CustomRequest) {
-    const currentUser = req.user;
+    const currentAuthenticatedUser = req.user;
 
-    if (!currentUser) {
-      throw new UnauthorizedException('User not found');
-    }
-
-    return this.usersService.getUserById(currentUser.id);
+    return this.usersService.getUserById(currentAuthenticatedUser.id);
   }
   @ApiOperation({ summary: 'Get the details of a user' })
   @ApiResponse({
@@ -73,10 +74,10 @@ export class UsersController {
   })
   @ApiResponse({
     status: 404,
-    description: 'User not found',
+    description: Error.USER_NOT_FOUND,
   })
   @Get(':id')
-  getUser(@Param('id') id: string) {
+  getUser(@Param('id') id: UserId) {
     return this.usersService.getUserById(id);
   }
 
@@ -110,11 +111,12 @@ export class UsersController {
   })
   @ApiResponse({
     status: 404,
-    description: 'User not found',
+    description: Error.USER_NOT_FOUND,
   })
   @Patch(':id')
+  @UseGuards(AuthGuard)
   @UseGuards(OwnershipGuard)
-  updateUser(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
+  updateUser(@Param('id') id: UserId, @Body() updateUserDto: UpdateUserDto) {
     return this.usersService.updateUser(id, updateUserDto);
   }
 
@@ -125,11 +127,23 @@ export class UsersController {
   })
   @ApiResponse({
     status: 404,
-    description: 'User not found',
+    description: Error.USER_NOT_FOUND,
   })
   @Delete(':id')
+  @UseGuards(AuthGuard)
   @UseGuards(OwnershipGuard)
-  deleteUser(@Param('id') id: string) {
+  async deleteUser(
+    @Request() req: CustomRequest,
+    @Param('id') id: UserId,
+  ): Promise<void> {
+    const currentAuthenticatedUser = req.user;
+
+    if (currentAuthenticatedUser.id !== id) {
+      throw new HttpException(
+        Error.USER_MODIFICATION_FORBIDDEN,
+        HttpStatus.FORBIDDEN,
+      );
+    }
     return this.usersService.deleteUser(id);
   }
 }

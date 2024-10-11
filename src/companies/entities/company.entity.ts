@@ -1,6 +1,6 @@
+import { Address } from 'src/common/types/Address';
 import { Invoice } from 'src/invoices/entities/invoice.entity';
-import { Address } from 'src/types/Address';
-import { User } from 'src/users/entities/user.entity';
+import { User, UserId } from 'src/users/entities/user.entity';
 import {
   Column,
   Entity,
@@ -10,41 +10,56 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
+export type CompanyId = string;
+
 @Entity()
 export class Company {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id: CompanyId;
 
   @Column()
   name: string;
 
-  @Column()
+  @Column({ nullable: true })
   website: string;
 
-  @Column()
+  @Column({ nullable: true })
   phone: string;
 
-  @Column()
+  @Column({ nullable: true })
   mobile: string;
 
   @Column()
   email: string;
 
-  @Column()
+  @Column({ nullable: true })
   image: string;
 
-  @Column()
+  @Column({ default: 'none' })
   industry: string;
 
-  @Column()
+  @Column({ nullable: true })
   registrationNumber: string;
 
   @Column('jsonb')
   address: Address;
 
+  @Column({ name: 'userId' })
+  belongsTo: UserId;
+
   @ManyToOne(() => User, (user) => user.companies, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'userId' })
-  belongsTo: User;
+  @JoinColumn({ name: 'userId' }) // Correctly placed here
+  user: User;
+
+  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  createdAt: Date;
+
+  @Column({
+    type: 'timestamp',
+    default: () => 'CURRENT_TIMESTAMP',
+    onUpdate: 'CURRENT_TIMESTAMP',
+  })
+  updatedAt: Date;
 
   @OneToMany(() => Invoice, (invoice) => invoice.company)
   invoices: Invoice[];

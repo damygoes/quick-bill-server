@@ -13,7 +13,7 @@ import {
 } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Error } from 'src/common/enums/error.enum';
-import { AuthGuard } from 'src/common/guards/auth-guard';
+import { AuthGuard } from 'src/common/guards/authGuard.guard';
 import { CompanyOwnershipGuard } from 'src/common/guards/companyOwnership.guard';
 import { Paginated } from 'src/common/pagination/pagination.dto';
 import { CustomRequest } from 'src/common/types/CustomRequest';
@@ -100,7 +100,6 @@ export class CompaniesController {
   })
   @Get()
   @UseGuards(AuthGuard)
-  @Get()
   async getCompanies(
     @Request() req: CustomRequest,
     @Query('page') page: number = 1,
@@ -164,10 +163,13 @@ export class CompaniesController {
     },
   })
   @Get(':id')
-  @UseGuards(AuthGuard)
-  @UseGuards(CompanyOwnershipGuard)
+  @UseGuards(AuthGuard, CompanyOwnershipGuard)
   async getCompany(@Param('id') id: CompanyId): Promise<Company | null> {
     const existingCompany = await this.companiesService.getCompany(id);
+
+    if (!existingCompany) {
+      throw new NotFoundException(Error.COMPANY_NOT_FOUND);
+    }
 
     return existingCompany;
   }
@@ -175,39 +177,7 @@ export class CompaniesController {
   @ApiOperation({ summary: 'Create a new company' })
   @ApiBody({
     description: 'The company details',
-    schema: {
-      type: 'object',
-      properties: {
-        name: { type: 'string', example: 'Company Name' },
-        website: {
-          type: 'string',
-          example: 'https://company-website.com',
-          nullable: true,
-        },
-        phone: { type: 'string', example: '1234567890', nullable: true },
-        mobile: { type: 'string', example: '9876543210', nullable: true },
-        email: { type: 'string', example: 'company@example.com' },
-        image: { type: 'string', example: 'image-url.jpg', nullable: true },
-        industry: { type: 'string', example: 'Retail' },
-        registrationNumber: {
-          type: 'string',
-          example: 'REG123456',
-          nullable: true,
-        },
-        address: {
-          type: 'object',
-          properties: {
-            street: { type: 'string', example: 'Main St' },
-            number: { type: 'string', example: '123A' },
-            zip: { type: 'string', example: '12345' },
-            city: { type: 'string', example: 'Offenburg' },
-            state: { type: 'string', example: 'Baden-Württemberg' },
-            country: { type: 'string', example: 'Germany' },
-          },
-        },
-      },
-      required: ['name', 'email', 'industry', 'address'], // specify required fields
-    },
+    type: CreateCompanyDto,
   })
   @ApiResponse({
     status: 201,
@@ -234,38 +204,7 @@ export class CompaniesController {
   @ApiOperation({ summary: 'Update a company by ID' })
   @ApiBody({
     description: 'The company details',
-    schema: {
-      type: 'object',
-      properties: {
-        name: { type: 'string', example: 'Company Name' },
-        website: {
-          type: 'string',
-          example: 'https://company-website.com',
-          nullable: true,
-        },
-        phone: { type: 'string', example: '1234567890', nullable: true },
-        mobile: { type: 'string', example: '9876543210', nullable: true },
-        email: { type: 'string', example: 'email@company.com' },
-        image: { type: 'string', example: 'image-url.jpg', nullable: true },
-        industry: { type: 'string', example: 'Retail' },
-        registrationNumber: {
-          type: 'string',
-          example: 'REG123456',
-          nullable: true,
-        },
-        address: {
-          type: 'object',
-          properties: {
-            street: { type: 'string', example: 'Main St' },
-            number: { type: 'string', example: '123A' },
-            zip: { type: 'string', example: '12345' },
-            city: { type: 'string', example: 'Offenburg' },
-            state: { type: 'string', example: 'Baden-Württemberg' },
-            country: { type: 'string', example: 'Germany' },
-          },
-        },
-      },
-    },
+    type: UpdateCompanyDto,
   })
   @ApiResponse({
     status: 200,
@@ -287,8 +226,7 @@ export class CompaniesController {
     },
   })
   @Patch(':id')
-  @UseGuards(AuthGuard)
-  @UseGuards(CompanyOwnershipGuard)
+  @UseGuards(AuthGuard, CompanyOwnershipGuard)
   async updateCompany(
     @Param('id') id: CompanyId,
     @Body() updateCompanyDto: UpdateCompanyDto,
@@ -312,8 +250,7 @@ export class CompaniesController {
     },
   })
   @Delete(':id')
-  @UseGuards(AuthGuard)
-  @UseGuards(CompanyOwnershipGuard)
+  @UseGuards(AuthGuard, CompanyOwnershipGuard)
   async deleteCompany(@Param('id') id: CompanyId): Promise<void> {
     return this.companiesService.deleteCompany(id);
   }

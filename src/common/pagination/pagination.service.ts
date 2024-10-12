@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { Repository } from 'typeorm';
+import { Repository, SelectQueryBuilder } from 'typeorm';
 
 @Injectable()
 export class PaginationService {
   async paginate<T>(
-    repository: Repository<T>,
+    queryOrRepo: Repository<T> | SelectQueryBuilder<T>,
     page: number,
     limit: number,
     whereCondition: object = {},
@@ -17,14 +17,27 @@ export class PaginationService {
   }> {
     const offset = (page - 1) * limit;
 
-    // Fetch the items and the total count
-    const [items, totalItems] = await repository.findAndCount({
-      where: whereCondition,
-      take: limit,
-      skip: offset,
-    });
+    let items: T[];
+    let totalItems: number;
 
-    // Calculate total pages
+    // Check if the input is a repository or a query builder
+    if (queryOrRepo instanceof Repository) {
+      // Handle Repository case
+      [items, totalItems] = await queryOrRepo.findAndCount({
+        where: whereCondition,
+        take: limit,
+        skip: offset,
+      });
+    } else if (queryOrRepo instanceof SelectQueryBuilder) {
+      // Handle QueryBuilder case
+      [items, totalItems] = await queryOrRepo
+        .skip(offset)
+        .take(limit)
+        .getManyAndCount();
+    } else {
+      throw new Error('Invalid query or repository provided');
+    }
+
     const totalPages = Math.ceil(totalItems / limit);
 
     return {

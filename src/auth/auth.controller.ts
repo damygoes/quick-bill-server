@@ -10,12 +10,16 @@ import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Request, Response } from 'express';
 import { RequestOtpDto } from 'src/otp/dto/request-otp.dto';
 import { VerifyOtpDto } from 'src/otp/dto/verify-otp.dto';
+import { UsersService } from 'src/users/users.service';
 import { AuthService } from './auth.service';
 
 @ApiTags('Authentication')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly usersService: UsersService,
+  ) {}
 
   @ApiOperation({ summary: 'Request an OTP' })
   @ApiBody({
@@ -73,11 +77,20 @@ export class AuthController {
       throw new UnauthorizedException('Invalid OTP');
     }
 
+    // Fetch the user details including userId
+    const user = await this.usersService.getUserWithEmail(verifyOtpDto.email);
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    // Generate access token and refresh token using user.id
     const accessToken = this.authService.generateAccessToken(
-      verifyOtpDto.email,
+      user.email,
+      user.id,
     );
     const refreshToken = await this.authService.generateAndStoreRefreshToken(
-      verifyOtpDto.email,
+      user.email,
+      user.id,
     );
 
     // Set tokens in httpOnly cookies

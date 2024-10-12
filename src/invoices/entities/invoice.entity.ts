@@ -1,4 +1,5 @@
 import { Company } from 'src/companies/entities/company.entity';
+import { Customer } from 'src/customers/entities/customer.entity';
 import { InvoiceItem } from 'src/invoice-items/entities/invoice-item.entity';
 import {
   Column,
@@ -32,11 +33,20 @@ export class Invoice {
   @Column()
   currency: string;
 
+  @Column({ default: false })
+  isArchived: boolean;
+
   @ManyToOne(() => Company, (company) => company.invoices, {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'companyId' })
   company: Company;
+
+  @ManyToOne(() => Customer, (customer) => customer.invoices, {
+    onDelete: 'SET NULL',
+  })
+  @JoinColumn({ name: 'customerId' })
+  customer: Customer;
 
   @OneToMany(() => InvoiceItem, (item) => item.invoice)
   items: InvoiceItem[];

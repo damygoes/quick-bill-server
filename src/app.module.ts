@@ -7,6 +7,8 @@ import { AuthMiddleware } from './common/middleware/auth.middleware';
 import { LoggerMiddleware } from './common/middleware/logger.middleware';
 import { CompaniesController } from './companies/companies.controller';
 import { CompaniesModule } from './companies/companies.module';
+import { CustomersController } from './customers/customers.controller';
+import { CustomersModule } from './customers/customers.module';
 import { DatabaseModule } from './database/database.module';
 import { EmailModule } from './email/email.module';
 import { InvoiceItemsController } from './invoice-items/invoice-items.controller';
@@ -16,7 +18,6 @@ import { InvoicesModule } from './invoices/invoices.module';
 import { OTPModule } from './otp/otp.module';
 import { UsersController } from './users/users.controller';
 import { UsersModule } from './users/users.module';
-
 @Module({
   imports: [
     AuthModule,
@@ -27,6 +28,7 @@ import { UsersModule } from './users/users.module';
     InvoiceItemsModule,
     OTPModule,
     EmailModule,
+    CustomersModule,
   ],
   controllers: [AppController],
   providers: [AppService],
@@ -44,6 +46,7 @@ export class AppModule implements NestModule {
       .forRoutes(
         UsersController,
         CompaniesController,
+        CustomersController,
         InvoicesController,
         InvoiceItemsController,
       );

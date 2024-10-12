@@ -12,7 +12,7 @@ import {
 } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Error } from 'src/common/enums/error.enum';
-import { AuthGuard } from 'src/common/guards/auth-guard';
+import { AuthGuard } from 'src/common/guards/authGuard.guard';
 import { OwnershipGuard } from 'src/common/guards/ownership-guard';
 import { CustomRequest } from 'src/common/types/CustomRequest';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -48,8 +48,7 @@ export class UsersController {
     description: Error.USER_NOT_FOUND,
   })
   @Get('self')
-  @UseGuards(AuthGuard)
-  @UseGuards(OwnershipGuard)
+  @UseGuards(AuthGuard, OwnershipGuard)
   async getAuthenticatedUser(@Request() req: CustomRequest) {
     const currentAuthenticatedUser = req.user;
 
@@ -114,8 +113,7 @@ export class UsersController {
     description: Error.USER_NOT_FOUND,
   })
   @Patch(':id')
-  @UseGuards(AuthGuard)
-  @UseGuards(OwnershipGuard)
+  @UseGuards(AuthGuard, OwnershipGuard)
   updateUser(@Param('id') id: UserId, @Body() updateUserDto: UpdateUserDto) {
     return this.usersService.updateUser(id, updateUserDto);
   }
@@ -130,8 +128,7 @@ export class UsersController {
     description: Error.USER_NOT_FOUND,
   })
   @Delete(':id')
-  @UseGuards(AuthGuard)
-  @UseGuards(OwnershipGuard)
+  @UseGuards(AuthGuard, OwnershipGuard)
   async deleteUser(
     @Request() req: CustomRequest,
     @Param('id') id: UserId,

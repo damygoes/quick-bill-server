@@ -1,10 +1,13 @@
 import { Address } from 'src/common/types/Address';
+import { Customer } from 'src/customers/entities/customer.entity';
 import { Invoice } from 'src/invoices/entities/invoice.entity';
 import { User, UserId } from 'src/users/entities/user.entity';
 import {
   Column,
   Entity,
   JoinColumn,
+  JoinTable,
+  ManyToMany,
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
@@ -17,7 +20,7 @@ export class Company {
   @PrimaryGeneratedColumn('uuid')
   id: CompanyId;
 
-  @Column()
+  @Column({ unique: true })
   name: string;
 
   @Column({ nullable: true })
@@ -29,7 +32,7 @@ export class Company {
   @Column({ nullable: true })
   mobile: string;
 
-  @Column()
+  @Column({ unique: true })
   email: string;
 
   @Column({ nullable: true })
@@ -48,7 +51,7 @@ export class Company {
   belongsTo: UserId;
 
   @ManyToOne(() => User, (user) => user.companies, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'userId' }) // Correctly placed here
+  @JoinColumn({ name: 'userId' })
   user: User;
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
@@ -60,6 +63,10 @@ export class Company {
     onUpdate: 'CURRENT_TIMESTAMP',
   })
   updatedAt: Date;
+
+  @ManyToMany(() => Customer, (customer) => customer.companies)
+  @JoinTable() // This is required to create a junction table
+  customers: Customer[];
 
   @OneToMany(() => Invoice, (invoice) => invoice.company)
   invoices: Invoice[];

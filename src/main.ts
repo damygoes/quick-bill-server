@@ -39,6 +39,7 @@ async function bootstrap() {
     .addTag('Authentication')
     .addTag('Users')
     .addTag('Companies')
+    .addTag('Customers')
     .addTag('Invoices')
     .addTag('Invoice Items')
     .build();

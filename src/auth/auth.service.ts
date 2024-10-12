@@ -4,14 +4,16 @@ import { InjectRepository } from '@nestjs/typeorm';
 import * as dotenv from 'dotenv';
 import { EmailService } from 'src/email/email.service';
 import { OTPService } from 'src/otp/otp.service';
+import { UserId } from 'src/users/entities/user.entity';
 import { Repository } from 'typeorm';
 import { UsersService } from '../users/users.service';
 import { RefreshToken } from './entities/refresh-token.entity';
 
 dotenv.config();
 
-interface TokenPayload {
+export interface TokenPayload {
   email: string;
+  userId: string;
 }
 
 @Injectable()
@@ -25,18 +27,19 @@ export class AuthService {
     private readonly usersService: UsersService,
   ) {}
 
-  // Generate Access Token
-  generateAccessToken(email: string): string {
-    const payload: TokenPayload = { email };
+  generateAccessToken(email: string, userId: UserId): string {
+    const payload: TokenPayload = { email, userId };
     return this.jwtService.sign(payload, {
       secret: process.env.JWT_SECRET,
       expiresIn: process.env.JWT_EXPIRATION,
     });
   }
 
-  // Generate and Store Refresh Token
-  async generateAndStoreRefreshToken(email: string): Promise<string> {
-    const payload: TokenPayload = { email };
+  async generateAndStoreRefreshToken(
+    email: string,
+    userId: UserId,
+  ): Promise<string> {
+    const payload: TokenPayload = { email, userId };
     const refreshTokenExpiryDate = process.env.JWT_REFRESH_EXPIRATION!;
     const refreshToken = this.jwtService.sign(payload, {
       secret: process.env.JWT_REFRESH_SECRET,
@@ -88,6 +91,7 @@ export class AuthService {
     }
 
     const email = decoded.email;
+    const userId = decoded.userId;
 
     const storedToken = await this.refreshTokenRepository.findOne({
       where: { token: refreshToken, userEmail: email },
@@ -98,7 +102,7 @@ export class AuthService {
     }
 
     // Generate a new access token
-    const newAccessToken = this.generateAccessToken(email);
+    const newAccessToken = this.generateAccessToken(email, userId);
     return newAccessToken;
   }
 

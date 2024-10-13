@@ -7,10 +7,12 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
+export type InvoiceItemId = string;
+
 @Entity()
 export class InvoiceItem {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id: InvoiceItemId;
 
   @Column()
   description: string;
@@ -24,7 +26,9 @@ export class InvoiceItem {
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   totalPrice: number;
 
-  @ManyToOne(() => Invoice, (invoice) => invoice.items, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Invoice, (invoice) => invoice.items, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'invoiceId' })
   invoice: Invoice;
 }

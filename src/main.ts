@@ -41,7 +41,6 @@ async function bootstrap() {
     .addTag('Companies')
     .addTag('Customers')
     .addTag('Invoices')
-    .addTag('Invoice Items')
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);

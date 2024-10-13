@@ -16,4 +16,11 @@ export enum Error {
   CUSTOMER_ALREADY_EXISTS = 'Customer already exists',
   CUSTOMER_ALREADY_EXISTS_FOR_COMPANY = 'This customer already exists for this company',
   DUPLICATE_EMAIL_OR_NAME = 'A customer with the same email or name already exists',
+  CUSTOMER_ID_REQUIRED = 'Customer ID is required',
+  CREATE_INVOICE_FAILED = 'Failed to create invoice',
+  INVOICE_NOT_FOUND = 'Invoice not found',
+  INVOICE_ID_REQUIRED = 'Invoice ID is required',
+  INVOICE_MODIFICATION_FORBIDDEN = "You don't have permission to modify this invoice",
+  INVOICE_ITEM_NOT_FOUND = 'Invoice item not found',
+  SAVE_ITEM_FAILED = 'Failed to save invoice item',
 }

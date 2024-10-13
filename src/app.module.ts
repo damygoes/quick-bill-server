@@ -11,7 +11,6 @@ import { CustomersController } from './customers/customers.controller';
 import { CustomersModule } from './customers/customers.module';
 import { DatabaseModule } from './database/database.module';
 import { EmailModule } from './email/email.module';
-import { InvoiceItemsController } from './invoice-items/invoice-items.controller';
 import { InvoiceItemsModule } from './invoice-items/invoice-items.module';
 import { InvoicesController } from './invoices/invoices.controller';
 import { InvoicesModule } from './invoices/invoices.module';
@@ -48,7 +47,6 @@ export class AppModule implements NestModule {
         CompaniesController,
         CustomersController,
         InvoicesController,
-        InvoiceItemsController,
       );
   }
 }

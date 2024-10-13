@@ -10,16 +10,18 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
+export type InvoiceId = string;
+
 @Entity()
 export class Invoice {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id: InvoiceId;
 
-  @Column()
+  @Column({ unique: true })
   invoiceNumber: string;
 
-  @Column({ type: 'date' })
-  date: string;
+  @Column({ type: 'timestamp' })
+  dueDate: Date;
 
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   subTotal: number;
@@ -30,11 +32,23 @@ export class Invoice {
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   vat: number;
 
+  @Column({ type: 'integer' })
+  vatPercentage: number;
+
   @Column()
   currency: string;
 
   @Column({ default: false })
   isArchived: boolean;
+
+  @Column({ default: false })
+  markAsDraft: boolean;
+
+  @Column({ nullable: true })
+  pdfUrl: string;
+
+  @OneToMany(() => InvoiceItem, (item) => item.invoice, { cascade: true })
+  items: InvoiceItem[];
 
   @ManyToOne(() => Company, (company) => company.invoices, {
     onDelete: 'CASCADE',
@@ -48,6 +62,13 @@ export class Invoice {
   @JoinColumn({ name: 'customerId' })
   customer: Customer;
 
-  @OneToMany(() => InvoiceItem, (item) => item.invoice)
-  items: InvoiceItem[];
+  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  createdAt: Date;
+
+  @Column({
+    type: 'timestamp',
+    default: () => 'CURRENT_TIMESTAMP',
+    onUpdate: 'CURRENT_TIMESTAMP',
+  })
+  updatedAt: Date;
 }

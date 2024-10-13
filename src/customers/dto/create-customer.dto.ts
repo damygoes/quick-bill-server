@@ -1,4 +1,10 @@
-import { IsEmail, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsUUID,
+} from 'class-validator';
 import { AddressDto } from 'src/common/dto/address.dto';
 import { CompanyId } from 'src/companies/entities/company.entity';
 
@@ -23,7 +29,7 @@ export class CreateCustomerDto {
   @IsNotEmpty()
   address: AddressDto;
 
-  @IsString()
+  @IsUUID()
   @IsNotEmpty()
   customerOf: CompanyId;
 }

@@ -23,4 +23,5 @@ export enum Error {
   INVOICE_MODIFICATION_FORBIDDEN = "You don't have permission to modify this invoice",
   INVOICE_ITEM_NOT_FOUND = 'Invoice item not found',
   SAVE_ITEM_FAILED = 'Failed to save invoice item',
+  UNEXPECTED_ERROR = 'An unexpected error occurred',
 }

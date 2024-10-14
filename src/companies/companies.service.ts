@@ -98,7 +98,7 @@ export class CompaniesService {
     return updatedCompany.id;
   }
 
-  async deleteCompany(id: CompanyId) {
+  async deleteCompany(id: CompanyId): Promise<CompanyId | null> {
     const existingCompany = await this.companiesRepository.findOne({
       where: { id },
       relations: ['customers'], // Load related customers
@@ -118,10 +118,7 @@ export class CompaniesService {
     // Now delete the company
     await this.companiesRepository.delete(id);
 
-    throw new HttpException(
-      'Company deleted successfully',
-      HttpStatus.NO_CONTENT,
-    );
+    return id;
   }
 
   async doesCustomerBelongToCompany(

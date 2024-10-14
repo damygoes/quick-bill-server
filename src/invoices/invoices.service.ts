@@ -99,9 +99,11 @@ export class InvoicesService {
     if (customerId) {
       queryBuilder.andWhere('invoice.customerId = :customerId', { customerId });
     }
-    if (archived !== undefined) {
-      queryBuilder.andWhere('invoice.isArchived = :archived', { archived });
+    if (archived === undefined) {
+      archived = false;
     }
+    queryBuilder.andWhere('invoice.isArchived = :archived', { archived });
+
     if (draft !== undefined) {
       queryBuilder.andWhere('invoice.markAsDraft = :draft', { draft });
     }
@@ -111,7 +113,7 @@ export class InvoicesService {
       });
     }
 
-    // Apply sorting if provided
+    // Apply sorting if provided, otherwise default to newest first (createdAt DESC)
     if (sortBy) {
       const validSortFields = [
         'createdAt',
@@ -128,8 +130,10 @@ export class InvoicesService {
               : `invoice.${sortBy}`;
         queryBuilder.orderBy(sortField, order);
       }
+    } else {
+      // Default sorting to createdAt DESC if no sortBy is provided
+      queryBuilder.orderBy('invoice.createdAt', 'DESC');
     }
-
     // Use the pagination service to paginate the query builder
     return this.paginationService.paginate(queryBuilder, page, limit);
   }
@@ -200,7 +204,7 @@ export class InvoicesService {
       );
 
       for (const itemToRemove of itemsToRemove) {
-        await this.invoiceItemsService.removeInvoiceItem(itemToRemove.id);
+        await this.invoiceItemsService.deleteInvoiceItem(itemToRemove.id);
       }
     }
 
@@ -210,7 +214,7 @@ export class InvoicesService {
     return invoice.id;
   }
 
-  async deleteInvoice(invoiceId: InvoiceId): Promise<string> {
+  async deleteInvoice(invoiceId: InvoiceId): Promise<InvoiceId | null> {
     const invoice = await this.invoiceRepository.findOne({
       where: { id: invoiceId },
     });
@@ -219,9 +223,45 @@ export class InvoicesService {
       throw new HttpException(Error.INVOICE_NOT_FOUND, HttpStatus.NOT_FOUND);
     }
 
-    await this.invoiceRepository.remove(invoice);
+    // Get Invoice Items
+    const items = invoice.items;
 
-    return 'Invoice deleted successfully';
+    if (items && items.length > 0) {
+      for (const item of items) {
+        await this.invoiceItemsService.removeInvoiceItem(item.id);
+      }
+    }
+
+    invoice.isArchived = true;
+
+    await this.invoiceRepository.save(invoice);
+
+    return invoice.id;
+  }
+
+  async restoreInvoice(invoiceId: InvoiceId): Promise<InvoiceId | null> {
+    const invoice = await this.invoiceRepository.findOne({
+      where: { id: invoiceId },
+    });
+
+    if (!invoice) {
+      throw new HttpException(Error.INVOICE_NOT_FOUND, HttpStatus.NOT_FOUND);
+    }
+
+    // Get Invoice Items
+    const items = invoice.items;
+
+    if (items && items.length > 0) {
+      for (const item of items) {
+        await this.invoiceItemsService.restoreInvoiceItem(item.id);
+      }
+    }
+
+    invoice.isArchived = false;
+
+    await this.invoiceRepository.save(invoice);
+
+    return invoice.id;
   }
 }
 

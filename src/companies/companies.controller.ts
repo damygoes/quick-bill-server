@@ -3,6 +3,8 @@ import {
   Controller,
   Delete,
   Get,
+  HttpException,
+  HttpStatus,
   NotFoundException,
   Param,
   Patch,
@@ -162,10 +164,12 @@ export class CompaniesController {
       },
     },
   })
-  @Get(':id')
+  @Get(':companyId')
   @UseGuards(AuthGuard, CompanyOwnershipGuard)
-  async getCompany(@Param('id') id: CompanyId): Promise<Company | null> {
-    const existingCompany = await this.companiesService.getCompany(id);
+  async getCompany(
+    @Param('companyId') companyId: CompanyId,
+  ): Promise<Company | null> {
+    const existingCompany = await this.companiesService.getCompany(companyId);
 
     if (!existingCompany) {
       throw new NotFoundException(Error.COMPANY_NOT_FOUND);
@@ -225,19 +229,24 @@ export class CompaniesController {
       },
     },
   })
-  @Patch(':id')
+  @Patch(':companyId')
   @UseGuards(AuthGuard, CompanyOwnershipGuard)
   async updateCompany(
-    @Param('id') id: CompanyId,
+    @Param('companyId') companyId: CompanyId,
     @Body() updateCompanyDto: UpdateCompanyDto,
   ): Promise<CompanyId | null> {
-    return this.companiesService.updateCompany(id, updateCompanyDto);
+    return this.companiesService.updateCompany(companyId, updateCompanyDto);
   }
 
   @ApiOperation({ summary: 'Delete a company by ID' })
   @ApiResponse({
     status: 200,
     description: 'Company successfully deleted',
+    schema: {
+      example: {
+        id: 'ff321-1234-1234-1234-1234567890ab',
+      },
+    },
   })
   @ApiResponse({
     status: 404,
@@ -249,9 +258,21 @@ export class CompaniesController {
       },
     },
   })
-  @Delete(':id')
+  @Delete(':companyId')
   @UseGuards(AuthGuard, CompanyOwnershipGuard)
-  async deleteCompany(@Param('id') id: CompanyId): Promise<void> {
-    return this.companiesService.deleteCompany(id);
+  async deleteCompany(
+    @Param('companyId') companyId: CompanyId,
+  ): Promise<CompanyId> {
+    const deletedCompanyId =
+      await this.companiesService.deleteCompany(companyId);
+
+    if (!deletedCompanyId) {
+      throw new HttpException(
+        Error.UNEXPECTED_ERROR,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+
+    return deletedCompanyId;
   }
 }

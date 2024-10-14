@@ -75,9 +75,9 @@ export class UsersController {
     status: 404,
     description: Error.USER_NOT_FOUND,
   })
-  @Get(':id')
-  getUser(@Param('id') id: UserId) {
-    return this.usersService.getUserById(id);
+  @Get(':userId')
+  getUser(@Param('userId') userId: UserId) {
+    return this.usersService.getUserById(userId);
   }
 
   @ApiOperation({ summary: 'Update the details of a user' })
@@ -112,10 +112,13 @@ export class UsersController {
     status: 404,
     description: Error.USER_NOT_FOUND,
   })
-  @Patch(':id')
+  @Patch(':userId')
   @UseGuards(AuthGuard, OwnershipGuard)
-  updateUser(@Param('id') id: UserId, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.updateUser(id, updateUserDto);
+  updateUser(
+    @Param('userId') userId: UserId,
+    @Body() updateUserDto: UpdateUserDto,
+  ) {
+    return this.usersService.updateUser(userId, updateUserDto);
   }
 
   @ApiOperation({ summary: 'Delete a user' })
@@ -127,20 +130,20 @@ export class UsersController {
     status: 404,
     description: Error.USER_NOT_FOUND,
   })
-  @Delete(':id')
+  @Delete(':userId')
   @UseGuards(AuthGuard, OwnershipGuard)
   async deleteUser(
     @Request() req: CustomRequest,
-    @Param('id') id: UserId,
+    @Param('userId') userId: UserId,
   ): Promise<void> {
     const currentAuthenticatedUser = req.user;
 
-    if (currentAuthenticatedUser.id !== id) {
+    if (currentAuthenticatedUser.id !== userId) {
       throw new HttpException(
         Error.USER_MODIFICATION_FORBIDDEN,
         HttpStatus.FORBIDDEN,
       );
     }
-    return this.usersService.deleteUser(id);
+    return this.usersService.deleteUser(userId);
   }
 }

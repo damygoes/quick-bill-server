@@ -404,8 +404,81 @@ export class InvoicesController {
     return this.invoicesService.updateInvoice(invoiceId, updateInvoiceDto);
   }
 
-  @Delete(':id')
-  deleteInvoice(@Param('id') id: string) {
-    return this.invoicesService.deleteInvoice(id);
+  @ApiOperation({
+    summary: 'Delete an invoice',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Invoice deleted successfully',
+    schema: {
+      example: {
+        id: 'b95ad732-9108-477f-bf0b-ef194a05aaf3',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Bad request',
+    schema: {
+      example: {
+        statusCode: 400,
+        message: Error.INVOICE_ID_REQUIRED,
+        error: 'Bad Request',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Invoice not found',
+    schema: {
+      example: {
+        statusCode: 404,
+        message: Error.INVOICE_NOT_FOUND,
+        error: 'Not Found',
+      },
+    },
+  })
+  @Delete(':invoiceId')
+  deleteInvoice(@Param('invoiceId') invoiceId: InvoiceId) {
+    return this.invoicesService.deleteInvoice(invoiceId);
+  }
+
+  @ApiOperation({
+    summary: 'Restore an invoice',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Invoice restored successfully',
+    schema: {
+      example: {
+        id: 'b95ad732-9108-477f-bf0b-ef194a05aaf3',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Bad request',
+    schema: {
+      example: {
+        statusCode: 400,
+        message: Error.INVOICE_ID_REQUIRED,
+        error: 'Bad Request',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Invoice not found',
+    schema: {
+      example: {
+        statusCode: 404,
+        message: Error.INVOICE_NOT_FOUND,
+        error: 'Not Found',
+      },
+    },
+  })
+  @Get('restore/:invoiceId')
+  restoreInvoice(@Param('invoiceId') invoiceId: InvoiceId) {
+    return this.invoicesService.restoreInvoice(invoiceId);
   }
 }

@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  HttpCode,
   Post,
   Req,
   Res,
@@ -35,10 +36,11 @@ export class AuthController {
     status: 200,
     description: 'OTP sent to email',
   })
+  @HttpCode(200)
   @Post('request-otp')
   async requestOTP(@Body() requestOtpDto: RequestOtpDto) {
     await this.authService.requestOTP(requestOtpDto.email);
-    return { message: 'OTP sent to your email.' };
+    return { status: 200, message: 'OTP sent to your email.' };
   }
 
   @ApiOperation({ summary: 'Login with OTP' })
@@ -79,6 +81,7 @@ export class AuthController {
 
     // Fetch the user details including userId
     const user = await this.usersService.getUserWithEmail(verifyOtpDto.email);
+
     if (!user) {
       throw new UnauthorizedException('User not found');
     }
@@ -108,7 +111,7 @@ export class AuthController {
       maxAge: parseInt(process.env.JWT_REFRESH_EXPIRATION) * 1000, // 1 day (86400s)
     });
 
-    return response.json({ message: 'Login successful' });
+    return response.json({ status: 200, message: 'Login successful' });
   }
 
   @ApiOperation({ summary: 'Refresh Access Token' })
@@ -132,23 +135,32 @@ export class AuthController {
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @Post('refresh-token')
-  async refreshToken(
-    @Body() body: { refreshToken: string },
-    @Res() response: Response,
-  ) {
-    const newAccessToken =
-      await this.authService.generateAccessTokenFromRefreshToken(
-        body.refreshToken,
-      );
+  async refreshToken(@Req() req: Request, @Res() res: Response) {
+    const refreshToken = req.cookies['refreshToken'];
 
-    response.cookie('accessToken', newAccessToken, {
-      httpOnly: true,
-      secure: false, // Use 'secure: true' in production with HTTPS
-      sameSite: 'strict',
-      maxAge: parseInt(process.env.JWT_EXPIRATION) * 1000, // 1 hour (3600s)
-    });
+    if (!refreshToken) {
+      throw new UnauthorizedException('Refresh token not provided');
+    }
 
-    return response.json({ accessToken: newAccessToken });
+    try {
+      const newAccessToken =
+        await this.authService.generateAccessTokenFromRefreshToken(
+          refreshToken,
+        );
+
+      // Send the new access token back as a cookie
+      res.cookie('accessToken', newAccessToken, {
+        httpOnly: true,
+        secure: false, // Set true in production
+        sameSite: 'strict',
+        maxAge: parseInt(process.env.JWT_EXPIRATION) * 1000,
+      });
+
+      return res.json({ message: 'Token refreshed successfully' });
+    } catch (error) {
+      console.log('error', error);
+      throw new UnauthorizedException('Invalid or expired refresh token');
+    }
   }
 
   @ApiOperation({ summary: 'Logout' })
@@ -174,7 +186,6 @@ export class AuthController {
     const decoded = this.authService.verifyAccessToken(accessToken);
 
     if (!decoded) {
-      // If the access token is invalid or expired, you can choose to still clear the cookies
       response.clearCookie('accessToken');
       response.clearCookie('refreshToken');
       return response.status(200).json({ message: 'Logged out successfully' });
